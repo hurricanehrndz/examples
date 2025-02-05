@@ -1,0 +1,100 @@
+# https://developer.arm.com/documentation/dui0472/m/C-and-C---Implementation-Details/Basic-data-types-in-ARM-C-and-C--
+# https://man.freebsd.org/cgi/man.cgi?query=route&sektion=4&manpath=netbsd
+
+route -n monitor:
+got message of size 136 on Mon Dec  9 15:20:00 2024
+RTM_ADD: Add Route: len 136, pid: 1159, seq 1, errno 17, flags:<UP,STATIC>
+locks:  inits:
+sockaddrs: <DST,GATEWAY,NETMASK>
+ 100.113.0.0 utun4319 255.255.0.0
+
+Go route monitor:
+INFO[0061] read 136 bytes (88 00 05 01 00 00 00 00 01 08 00 00 07 00 00 00 87 04 00 00 01 00 00 00 11 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 02 00 00 64 71 00 00 00 00 00 00 00 00 00 00 14 12 1f 00 01 08 00 00 75 74 75 6e 34 33 31 39 00 00 00 00 06 02 00 00 ff ff 00 00), failed to parse RIB: invalid address
+
+
+Bytes:
+// rt_msghdr
+88 00 05 01 00 00 00 00
+01 08 00 00 07 00 00 00
+87 04 00 00 01 00 00 00
+11 00 00 00 00 00 00 00
+00 00 00 00
+
+// rt_metrics
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+
+// sockaddrs
+10 02 00 00 64 71 00 00
+00 00 00 00 00 00 00 00
+
+14 12 1f 00 01 08 00 00
+75 74 75 6e 34 33 31 39
+00 00 00 00
+
+06 02 00 00 ff ff 00 00
+
+
+// from /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/net/route.h
+// size is 36 bytes
+struct rt_msghdr {
+	u_short rtm_msglen;     /* to skip over non-understood messages */       88 00       = 0x0088        = 136
+	u_char  rtm_version;    /* future binary compatibility */                05          = 0x05          = 5
+	u_char  rtm_type;       /* message type */                               01          = 0x01          = RTM_ADD
+	u_short rtm_index;      /* index for associated ifp */                   00 00 00 00 = 0x00          = 0       + 00 00 (padding, because int is supposed to be 4 byte aligned)
+	int     rtm_flags;      /* flags, incl. kern & message, e.g. DONE */     01 08 00 00 = 0x00000801    = 0x0800 (STATIC) + 0x0001 (UP)
+	int     rtm_addrs;      /* bitmask identifying sockaddrs in msg */       07 00 00 00 = 0x00000007    = 7 = DST, GW, MASK
+	pid_t   rtm_pid;        /* identify sender */                            87 04 00 00 = 0x00000487    = 1159
+	int     rtm_seq;        /* for sender to identify action */              01 00 00 00 = 0x00000001    = 1
+	int     rtm_errno;      /* why failed */                                 11 00 00 00 = 0x00000011    = 17
+	int     rtm_use;        /* from rtentry */                               00 00 00 00
+	u_int32_t rtm_inits;    /* which metrics we are initializing */          00 00 00 00
+	struct rt_metrics rtm_rmx; /* metrics themselves */
+};
+
+
+// from /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/net/route.h
+// size is 56 bytes
+struct rt_metrics {
+	u_int32_t       rmx_locks;      /* Kernel leaves these values alone */
+	u_int32_t       rmx_mtu;        /* MTU for this path */
+	u_int32_t       rmx_hopcount;   /* max hops expected */
+	int32_t         rmx_expire;     /* lifetime for route, e.g. redirect */
+	u_int32_t       rmx_recvpipe;   /* inbound delay-bandwidth product */
+	u_int32_t       rmx_sendpipe;   /* outbound delay-bandwidth product */
+	u_int32_t       rmx_ssthresh;   /* outbound gateway buffer limit */
+	u_int32_t       rmx_rtt;        /* estimated round trip time */
+	u_int32_t       rmx_rttvar;     /* estimated rtt variance */
+	u_int32_t       rmx_pksent;     /* packets sent using this route */
+	u_int32_t       rmx_filler[4];  /* will be used for TCP's peer-MSS cache */
+};
+
+
+// from /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/net/if_dl.h
+// https://github.com/apple/darwin-xnu/blob/2ff845c2e033bd0ff64b5b6aa6063a1f8f65aa32/bsd/net/route.c#L813
+/*
+ * Structure of a Link-Level sockaddr:
+ */
+struct sockaddr_dl {
+	u_char  sdl_len;        /* Total length of sockaddr */
+	u_char  sdl_family;     /* AF_LINK */
+	u_short sdl_index;      /* if != 0, system given index for interface */
+	u_char  sdl_type;       /* interface type */
+	u_char  sdl_nlen;       /* interface name length, no trailing 0 reqd. */
+	u_char  sdl_alen;       /* link level address length */
+	u_char  sdl_slen;       /* link layer selector length */
+	char    sdl_data[12];
+	/* minimum work area, can be larger;
+	 *  contains both if name and ll address */
+#ifndef __APPLE__
+	/* For TokenRing */
+	u_short sdl_rcf;        /* source routing control */
+	u_short sdl_route[16];  /* source routing information */
+#endif
+};
+
