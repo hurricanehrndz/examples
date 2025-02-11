@@ -23,10 +23,16 @@ func main() {
 	rtm := &route.RouteMessage{
 		Version: syscall.RTM_VERSION,
 		Type:    unix.RTM_GET,
+		Flags:   unix.RTF_IFSCOPE,
 		ID:      uintptr(pid),
 		Seq:     0,
+		Index:   15,
 		Addrs: []route.Addr{
-			&route.Inet4Addr{IP: [4]byte{127, 0, 0, 0}},
+			&route.Inet4Addr{IP: [4]byte{0, 0, 0, 0}},
+			nil,
+			&route.Inet4Addr{IP: [4]byte{0, 0, 0, 0}},
+			nil,
+			&route.LinkAddr{},
 		},
 	}
 
