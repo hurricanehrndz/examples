@@ -20,7 +20,7 @@ func main() {
 
 	pid := os.Getpid()
 	// Create a RouteMessage with RTM_GET type
-	rtm := &route.RouteMessage{
+	rtm := route.RouteMessage{
 		Version: syscall.RTM_VERSION,
 		Type:    unix.RTM_GET,
 		Flags:   unix.RTF_IFSCOPE,
