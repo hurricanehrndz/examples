@@ -26,7 +26,7 @@ func main() {
 		Flags:   unix.RTF_IFSCOPE,
 		ID:      uintptr(pid),
 		Seq:     0,
-		Index:   15,
+		// Index:   15,
 		Addrs: []route.Addr{
 			&route.Inet4Addr{IP: [4]byte{0, 0, 0, 0}},
 			nil,
@@ -39,6 +39,8 @@ func main() {
 	// Marshal the message into bytes
 	msgBytes, err := rtm.Marshal()
 	if err != nil {
+		// returns no such process when interface doesn't exist
+		// returns no such process when route not in table
 		fmt.Println("Error marshaling RouteMessage:", err)
 		os.Exit(1)
 	}

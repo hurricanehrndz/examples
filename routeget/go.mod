@@ -8,5 +8,4 @@ require (
 	golang.org/x/sys v0.30.0
 )
 
-replace golang.org/x/net => ../../golang-net/
 replace github.com/hurricanehrndz/examples/rtmprint => ../rtmprint/
