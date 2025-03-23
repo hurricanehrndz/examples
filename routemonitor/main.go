@@ -29,8 +29,8 @@ func main() {
 		if err != nil {
 			log.Printf("%s\n", err)
 		}
+		// read route messages only, ignore others
 		if n < unix.SizeofRtMsghdr {
-			log.Printf("Network monitor: read from routing socket returned less than expected: %d bytes\n", n)
 			continue
 		}
 
